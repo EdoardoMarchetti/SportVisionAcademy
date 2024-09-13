@@ -1,0 +1,185 @@
+import re
+import pandas as pd
+import streamlit as st
+from streamlit_gsheets import GSheetsConnection
+from questions import *
+from utils import *
+
+# MARK: Session state
+mandatory_keys = ['Nome', 'Cognome', 'Email', 'Telefono', 'Età']
+
+keys = mandatory_keys
+for k in keys:
+    if k not in st.session_state:
+        st.session_state[k] = ''
+
+# ----------Questionario--------------
+# Question dictionary
+
+if 'questions' not in st.session_state:
+    st.session_state['questions'] = {}
+
+def set_question_in_session_state(question):
+    if question not in st.session_state:
+        st.session_state['questions'][question] = {a['text']: 0 for a in questions[question].values()}
+
+# Function to handle checkbox selection and update session state
+def change_answer_status(question, selection):
+    for key in st.session_state['questions'][question]:
+        st.session_state['questions'][question][key] = 0  # Deselect all
+    st.session_state['questions'][question][selection] = 1  # Select the chosen one
+
+
+
+# MARK: Google Sheet connection
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+# Fetch existing data
+existing_data = conn.read(
+    worksheet="Sheet1",  # Nome worksheet
+    #usecols=list(range(6)),  # Numero di colonne
+    ttl=5
+)
+existing_data = existing_data.dropna(how='all')
+
+# st.dataframe(existing_data)
+
+st.title('Sport Vision Academy')
+
+# Initialize session state for answers, score, and final answers
+if 'answers' not in st.session_state:
+    st.session_state.answers = {}
+if 'score' not in st.session_state:
+    st.session_state.score = 0
+if 'final_answers' not in st.session_state:
+    st.session_state.final_answers = {}
+if 'questionnaire_completed' not in st.session_state:
+    st.session_state.questionnaire_completed = False
+
+# Helper function to check if questionnaire is completed
+def check_questionnaire_completed():
+    """Check if all the questions are answered and set the session state."""
+    questionnaire_complete = all(f"{q}_confirmed" in st.session_state for q in questions)
+    st.session_state.questionnaire_completed = questionnaire_complete
+    return questionnaire_complete
+
+# Helper function to display a question and handle answer selection
+def display_question(question_key, question_data):
+    st.markdown(f"### {question_data['question_text']}")
+    
+    # Radio button to select an answer
+    selected_answer = st.radio(
+        "Choose an option:",
+        options=[(ans_key, ans['text']) for ans_key, ans in question_data['answers'].items()],
+        format_func=lambda x: x[1],  # Display only the answer text
+        key=f"radio_{question_key}",
+        label_visibility='collapsed'
+    )
+    
+    # Button to confirm the selection
+    if st.button("Confirm", key=f"confirm_{question_key}"):
+        # Store the selected answer and update the score
+        st.session_state.answers[question_key] = selected_answer[0]
+        st.session_state.score += question_data['answers'][selected_answer[0]]['points']
+        
+        # Update the final_answers dictionary
+        st.session_state.final_answers[question_key] = {
+            'question_text': question_data['question_text'],
+            'selected_answer': selected_answer[0],
+            'selected_text': question_data['answers'][selected_answer[0]]['text'],
+            'points': question_data['answers'][selected_answer[0]]['points']
+        }
+        st.session_state[f"{question_key}_confirmed"] = True
+        
+        # Check if the questionnaire is now completed
+        completed = check_questionnaire_completed()
+
+        if completed:
+            st.rerun()
+        
+        
+
+# Function to handle sub-questions or messages
+def display_subquestions_or_message(main_question_key, main_answer_key, question_data):
+    main_answer = question_data['answers'][main_answer_key]
+    
+    # Check if the main answer has sub-questions or a message
+    if 'sub_questions' in main_answer:
+        sub_questions = main_answer['sub_questions']
+        
+        # For each sub-question
+        for sub_question_key, sub_question_data in sub_questions.items():
+            if f"{main_question_key}_confirmed" in st.session_state:
+                display_question(sub_question_key, sub_question_data)
+    elif 'message' in main_answer:
+        # Display the message
+        st.markdown(f"**Note:** {main_answer['message']}")
+
+
+
+
+# Conditionally render content
+if st.session_state.questionnaire_completed:
+
+    # Upload the data to the worksheet
+    user_record = {k: st.session_state[k] for k in mandatory_keys}
+    answers = {'_'.join(q.split('_')[1:]): v['selected_text'] for q, v in st.session_state.final_answers.items()}
+    user_record.update(answers)
+    user_record.update({'score': st.session_state.score})
+
+    update_data = pd.concat(
+        [existing_data, pd.Series(user_record).to_frame().T], ignore_index=True
+    )
+
+    conn.update(worksheet='Sheet1', data=update_data)
+
+    # Mark the questionnaire as submitted
+    st.session_state['submitted'] = True
+
+    # Display thank you message
+    st.markdown("# Grazie per aver completato il questionario!")
+    
+else:
+    # Display the questionnaire form
+
+    st.markdown('### Info personali')
+    name_col, surname_col = st.columns(2)
+
+    with name_col:
+        st.session_state['Nome'] = st.text_input('Nome')
+
+    with surname_col:
+        st.session_state['Cognome'] = st.text_input('Cognome')
+
+    email_col, phone_col, age_col = st.columns([0.4, 0.4, 0.2])
+
+    with email_col:
+        st.session_state['Email'] = st.text_input('Email')
+
+    with phone_col:
+        st.session_state['Telefono'] = st.text_input('Telefono (includi suffisso ex.+39)')
+
+    with age_col:
+        st.session_state['Età'] = st.number_input('Età', min_value=18)
+
+    # Check for mandatory fields
+    for k in mandatory_keys:
+        if not st.session_state[k]:
+            st.warning('Completa i campi precedenti')
+            st.stop()
+
+    # Check if email and phone are valid before proceeding
+    if not are_personal_details_valid():
+        st.stop()
+
+    st.divider()
+
+    # Render main questions
+    for question_key, question_data in questions.items():
+        # Display the main question
+        display_question(question_key, question_data)
+        
+        # If the main question is confirmed, show sub-questions or message
+        if f"{question_key}_confirmed" in st.session_state:
+            main_answer_key = st.session_state.answers[question_key]
+            display_subquestions_or_message(question_key, main_answer_key, question_data)
