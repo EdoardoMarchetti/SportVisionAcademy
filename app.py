@@ -67,45 +67,53 @@ if 'questionnaire_completed' not in st.session_state:
 def check_questionnaire_completed():
     """Check if all the questions are answered and set the session state."""
     questionnaire_complete = all(f"{q}_confirmed" in st.session_state for q in questions)
-    st.session_state.questionnaire_completed = questionnaire_complete
+    if questionnaire_complete:
+        st.session_state.questionnaire_completed = questionnaire_complete
+    else:
+        st.error('Per favore compila tutte le domande')
     return questionnaire_complete
 
 # Helper function to display a question and handle answer selection
 def display_question(question_key, question_data):
     st.markdown(f"### {question_data['question_text']}")
-    
-    # Radio button to select an answer
-    selected_answer = st.radio(
-        "Choose an option:",
-        options=[(ans_key, ans['text']) for ans_key, ans in question_data['answers'].items()],
-        format_func=lambda x: x[1],  # Display only the answer text
-        key=f"radio_{question_key}",
-        label_visibility='collapsed'
-    )
+
+    selected_answer = st.selectbox(
+                question_data["question_text"], 
+                options=[ans['text'] for ans in question_data['answers'].values()], 
+                key=question_key,  # Use the question_key to track answers
+                index = None,
+                label_visibility = 'collapsed'
+            )
     
     # Button to confirm the selection
-    if st.button("Confirm", key=f"confirm_{question_key}"):
+    if selected_answer:
         question_category = question_data['category']
+        answers_object = list(filter(lambda x: x[1]['text'] == selected_answer, question_data['answers'].items()))[0]
+        answer_key, asnwer_prop = answers_object
+        
         # Store the selected answer and update the score
-        st.session_state.answers[question_key] = selected_answer[0]
-        st.session_state.score[question_category] += question_data['answers'][selected_answer[0]]['points']
-        st.session_state.score['score'] += question_data['answers'][selected_answer[0]]['points']
+        st.session_state.answers[question_key] = answer_key
+        st.session_state.score[question_category] += asnwer_prop['points']
+        st.session_state.score['score'] += asnwer_prop['points']
         
         # Update the final_answers dictionary
         st.session_state.final_answers[question_key] = {
             'question_text': question_data['question_text'],
             'category': question_data['category'],
-            'selected_answer': selected_answer[0],
-            'selected_text': question_data['answers'][selected_answer[0]]['text'],
-            'points': question_data['answers'][selected_answer[0]]['points']
+            'selected_answer': selected_answer,
+            'selected_text': asnwer_prop['text'],
+            'points': asnwer_prop['points']
         }
         st.session_state[f"{question_key}_confirmed"] = True
         
-        # Check if the questionnaire is now completed
-        completed = check_questionnaire_completed()
+        # # Check if the questionnaire is now completed
+        # completed = check_questionnaire_completed()
 
-        if completed:
-            st.rerun()
+        # if completed:
+        #     st.rerun()
+
+
+    return selected_answer
         
 # Function to handle sub-questions or messages
 def display_subquestions_or_message(main_question_key, main_answer_key, question_data):
@@ -188,12 +196,15 @@ else:
 
     st.divider()
 
+
     # Render main questions
     for question_key, question_data in questions.items():
         # Display the main question
-        display_question(question_key, question_data)
+        selected_answer = display_question(question_key, question_data)
         
         # If the main question is confirmed, show sub-questions or message
-        if f"{question_key}_confirmed" in st.session_state:
+        if selected_answer: #f"{question_key}_confirmed" in st.session_state:
             main_answer_key = st.session_state.answers[question_key]
             display_subquestions_or_message(question_key, main_answer_key, question_data)
+        
+    st.button(label='Invia', on_click=check_questionnaire_completed)
