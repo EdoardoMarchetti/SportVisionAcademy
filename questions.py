@@ -1,6 +1,7 @@
 questions = {
     'q_lavori_nel_calcio': {  # Unique ID for the question
         'question_text': 'Lavori nel calcio?',
+        'category': 'Calcio',
         'answers': {
             'a_si': {  # Unique ID for the answer 'sì'
                 'text': 'Sì',
@@ -8,6 +9,7 @@ questions = {
                 'sub_questions': {
                     'sq_che_ruolo_ricopri': {  # Unique ID for sub-question
                         'question_text': 'Che ruolo ricopri?',
+                        'category': 'Calcio',
                         'answers': {
                             'a_prima_squadra': {  # Unique ID for each sub-answer
                                 'text': 'Allenatore / collaboratore / dirigente in prima squadra',
@@ -25,6 +27,7 @@ questions = {
                     },
                     'sq_iscrizione_corso': {  # Another sub-question under 'sì'
                         'question_text': 'Stai valutando l’iscrizione al corso perché?',
+                        'category': 'Personale',
                         'answers': {
                             'a_specializzarmi': {
                                 'text': 'Voglio specializzarmi',
@@ -48,6 +51,7 @@ questions = {
                 'sub_questions': {
                     'sq_calcio_come_lo_vedi': {
                         'question_text': 'Il calcio come lo vedi?',
+                        'category': 'Calcio',
                         'answers': {
                             'a_tifoso_lavorare': {
                                 'text': 'Sono un tifoso e voglio lavorare nel calcio',
@@ -65,6 +69,7 @@ questions = {
                     },
                     'sq_iscrizione_corso': {  # Another sub-question under 'no'
                         'question_text': 'Stai valutando l’iscrizione al corso perché?',
+                        'category': 'Personale',
                         'answers': {
                             'a_specializzarmi': {
                                 'text': 'Voglio specializzarmi',
@@ -86,33 +91,11 @@ questions = {
     },
     'q_pc_windows_mac': {
         'question_text': 'Hai un PC Windows o un MAC?',
+        'category': 'Tecnologia',
         'answers': {
             'a_si': {
                 'text': 'Sì',
                 'points': 2,
-                'sub_questions': {
-                    'sq_telefono': {
-                        'question_text': 'Che tipo di telefono hai?',
-                        'answers': {
-                            'a_android': {
-                                'text': 'Ho un cellulare android',
-                                'points': 2
-                            },
-                            'a_iphone': {
-                                'text': 'Ho un cellulare iphone',
-                                'points': 2
-                            },
-                            'a_android_tablet': {
-                                'text': 'Ho un cellulare android e pure un tablet o un ipad',
-                                'points': 3
-                            },
-                            'a_iphone_tablet': {
-                                'text': 'Ho un cellulare iphone e pure un tablet o un ipad',
-                                'points': 3
-                            }
-                        }
-                    }
-                }
             },
             'a_no': {
                 'text': 'No',
@@ -121,8 +104,33 @@ questions = {
             }
         }
     },
+ 
+    'q_telefono': {
+        'question_text': 'Che tipo di telefono hai?',
+        'category': 'Tecnologia',
+        'answers': {
+            'a_android': {
+                'text': 'Ho un cellulare android',
+                'points': 2
+            },
+            'a_iphone': {
+                'text': 'Ho un cellulare iphone',
+                'points': 2
+            },
+            'a_android_tablet': {
+                'text': 'Ho un cellulare android e pure un tablet o un ipad',
+                'points': 3
+            },
+            'a_iphone_tablet': {
+                'text': 'Ho un cellulare iphone e pure un tablet o un ipad',
+                'points': 3
+            }
+        }
+    },
+    
     'q_importo_match_analyst': {
         'question_text': 'Qual è il miglior importo che vuoi pagare per diventare match analyst?',
+        'category': 'Economico',
         'answers': {
             'a_10_euro': {
                 'text': '10 euro',

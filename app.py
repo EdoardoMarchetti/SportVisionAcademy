@@ -1,12 +1,16 @@
+from collections import defaultdict
 import re
 import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from questions import *
 from utils import *
+import os.path as osp
+from viz import pizza_plot, scatter_ranking, radar_plot
 
 # MARK: Session state
 mandatory_keys = ['Nome', 'Cognome', 'Email', 'Telefono', 'Età']
+score_categories = ['Tecnologia', 'Calcio', 'Personale', 'Economico']
 
 keys = mandatory_keys
 for k in keys:
@@ -36,21 +40,24 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 # Fetch existing data
 existing_data = conn.read(
-    worksheet="Sheet1",  # Nome worksheet
+    worksheet="mock_data",  # Nome worksheet
     #usecols=list(range(6)),  # Numero di colonne
     ttl=5
 )
 existing_data = existing_data.dropna(how='all')
 
 # st.dataframe(existing_data)
-
-st.title('Sport Vision Academy')
+img_col, title_col = st.columns([.2,.8], vertical_alignment='center')
+with img_col:
+    st.image(osp.join('loghi', 'verde.png'))
+with title_col:
+    st.title('Sport Analisi Academy')
 
 # Initialize session state for answers, score, and final answers
 if 'answers' not in st.session_state:
     st.session_state.answers = {}
 if 'score' not in st.session_state:
-    st.session_state.score = 0
+    st.session_state.score = defaultdict(lambda : 0)
 if 'final_answers' not in st.session_state:
     st.session_state.final_answers = {}
 if 'questionnaire_completed' not in st.session_state:
@@ -78,13 +85,16 @@ def display_question(question_key, question_data):
     
     # Button to confirm the selection
     if st.button("Confirm", key=f"confirm_{question_key}"):
+        question_category = question_data['category']
         # Store the selected answer and update the score
         st.session_state.answers[question_key] = selected_answer[0]
-        st.session_state.score += question_data['answers'][selected_answer[0]]['points']
+        st.session_state.score[question_category] += question_data['answers'][selected_answer[0]]['points']
+        st.session_state.score['score'] += question_data['answers'][selected_answer[0]]['points']
         
         # Update the final_answers dictionary
         st.session_state.final_answers[question_key] = {
             'question_text': question_data['question_text'],
+            'category': question_data['category'],
             'selected_answer': selected_answer[0],
             'selected_text': question_data['answers'][selected_answer[0]]['text'],
             'points': question_data['answers'][selected_answer[0]]['points']
@@ -97,8 +107,6 @@ def display_question(question_key, question_data):
         if completed:
             st.rerun()
         
-        
-
 # Function to handle sub-questions or messages
 def display_subquestions_or_message(main_question_key, main_answer_key, question_data):
     main_answer = question_data['answers'][main_answer_key]
@@ -125,12 +133,12 @@ if st.session_state.questionnaire_completed:
     user_record = {k: st.session_state[k] for k in mandatory_keys}
     answers = {'_'.join(q.split('_')[1:]): v['selected_text'] for q, v in st.session_state.final_answers.items()}
     user_record.update(answers)
-    user_record.update({'score': st.session_state.score})
+    user_record.update(st.session_state.score)
 
     update_data = pd.concat(
         [existing_data, pd.Series(user_record).to_frame().T], ignore_index=True
     )
-
+    #st.table(update_data)
     conn.update(worksheet='Sheet1', data=update_data)
 
     # Mark the questionnaire as submitted
@@ -138,6 +146,12 @@ if st.session_state.questionnaire_completed:
 
     # Display thank you message
     st.markdown("# Grazie per aver completato il questionario!")
+
+    
+
+    st.pyplot(radar_plot(df_selected=update_data, highlight_user=st.session_state['Email']))
+
+    st.pyplot(pizza_plot(df_selected=update_data, highlight_user=st.session_state['Email']))
     
 else:
     # Display the questionnaire form
@@ -146,10 +160,10 @@ else:
     name_col, surname_col = st.columns(2)
 
     with name_col:
-        st.session_state['Nome'] = st.text_input('Nome')
+        st.session_state['Nome'] = st.text_input('Nome').capitalize()
 
     with surname_col:
-        st.session_state['Cognome'] = st.text_input('Cognome')
+        st.session_state['Cognome'] = st.text_input('Cognome').capitalize()
 
     email_col, phone_col, age_col = st.columns([0.4, 0.4, 0.2])
 
@@ -160,7 +174,7 @@ else:
         st.session_state['Telefono'] = st.text_input('Telefono (includi suffisso ex.+39)')
 
     with age_col:
-        st.session_state['Età'] = st.number_input('Età', min_value=18)
+        st.session_state['Età'] = st.text_input('Età')
 
     # Check for mandatory fields
     for k in mandatory_keys:
