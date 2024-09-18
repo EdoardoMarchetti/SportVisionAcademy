@@ -151,3 +151,24 @@ questions = {
         }
     }
 }
+
+score_ranges = {
+    'START': {
+        'range': (0, 6),
+        'message': "Ci rivediamo dopo il tuo compleanno. Festeggiare insieme a chi ti vuole bene sarà per te un momento importante per coinvolgere amici e parenti nell’aiutarti a raccogliere le risorse per iniziare a diventare match analyst. Ti aspettiamo."
+    },
+    'BEGINNER': {
+        'range': (7, 10),
+        'message': "Benissimo!!! Uno, due, tre: partiamo. Benvenuto nel mondo dei match analyst. Ti condivideremo la nostra migliore proposta di formazione che fa al caso tuo."
+    },
+    'CHAMPION': {
+        'range': (11, 15),
+        'message': "Ci vuole passione e disciplina per entrare nel mondo del calcio e tu le hai. Siamo felici di insegnarti la nostra metodologia sulla match analysis. Ti condivideremo la nostra migliore proposta di formazione che fa al caso tuo."
+    },
+    'GOLD': {
+        'range': (16, 16),
+        'message': "Complimenti, il tuo profilo è veramente interessante. Saremo molto felici di aiutarti a raggiungere il tuo obbiettivo nel mondo del calcio. Ti condivideremo la nostra migliore proposta di formazione che fa al caso tuo."
+    }
+}
+
+
