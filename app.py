@@ -3,7 +3,7 @@ import re
 import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
-from questions import *
+from costants import *
 from utils import *
 import os.path as osp
 from viz import pizza_plot, scatter_ranking, radar_plot
@@ -11,6 +11,7 @@ from viz import pizza_plot, scatter_ranking, radar_plot
 # MARK: Session state
 mandatory_keys = ['Nome', 'Cognome', 'Email', 'Telefono', 'Età']
 score_categories = ['Tecnologia', 'Calcio', 'Personale', 'Economico']
+SHEET = 'Sheet1'
 
 keys = mandatory_keys
 for k in keys:
@@ -40,8 +41,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 # Fetch existing data
 existing_data = conn.read(
-    worksheet="mock_data",  # Nome worksheet
-    #usecols=list(range(6)),  # Numero di colonne
+    worksheet=SHEET,  # Nome worksheet
     ttl=5
 )
 existing_data = existing_data.dropna(how='all')
@@ -93,8 +93,11 @@ def display_question(question_key, question_data):
         
         # Store the selected answer and update the score
         st.session_state.answers[question_key] = answer_key
-        st.session_state.score[question_category] += asnwer_prop['points']
-        st.session_state.score['score'] += asnwer_prop['points']
+        # st.session_state.score[question_category] += asnwer_prop['points']
+        # st.session_state.score['score'] += asnwer_prop['points']
+        # for c in score_categories:
+        #     st.write(c, st.session_state.score[c])
+        # st.write(st.session_state.score['score'])
         
         # Update the final_answers dictionary
         st.session_state.final_answers[question_key] = {
@@ -132,7 +135,19 @@ def display_subquestions_or_message(main_question_key, main_answer_key, question
         st.markdown(f"**Note:** {main_answer['message']}")
 
 
+def compute_scores(final_answers):
+    scores = {
+        k:0 for k in score_categories
+    }
 
+    for v in final_answers.values():
+        scores[v['category']] += v['points']
+
+    scores['score'] = sum(list(scores.values()))
+
+    st.session_state['score'] = scores
+
+    return scores
 
 # Conditionally render content
 if st.session_state.questionnaire_completed:
@@ -141,20 +156,27 @@ if st.session_state.questionnaire_completed:
     user_record = {k: st.session_state[k] for k in mandatory_keys}
     answers = {'_'.join(q.split('_')[1:]): v['selected_text'] for q, v in st.session_state.final_answers.items()}
     user_record.update(answers)
-    user_record.update(st.session_state.score)
+    scores = compute_scores(st.session_state.final_answers)
+    user_record.update(scores)
 
     update_data = pd.concat(
         [existing_data, pd.Series(user_record).to_frame().T], ignore_index=True
     )
     #st.table(update_data)
-    conn.update(worksheet='Sheet1', data=update_data)
+    conn.update(worksheet=SHEET, data=update_data)
 
     # Mark the questionnaire as submitted
     st.session_state['submitted'] = True
 
-    # Display thank you message
-    st.markdown("# Grazie per aver completato il questionario!")
+    def get_thank_you_message(total_score):
+        for category, data in score_ranges.items():
+            if data['range'][0] <= total_score <= data['range'][1]:
+                return data['message'], category
 
+    message, fascia = get_thank_you_message(scores['score'])
+    # Display thank you message
+    st.markdown(f"# Fascia: {fascia}")
+    st.markdown(f"#### {message}")
     
 
     st.pyplot(radar_plot(df_selected=update_data, highlight_user=st.session_state['Email']))
@@ -206,5 +228,7 @@ else:
         if selected_answer: #f"{question_key}_confirmed" in st.session_state:
             main_answer_key = st.session_state.answers[question_key]
             display_subquestions_or_message(question_key, main_answer_key, question_data)
+
+    
         
     st.button(label='Invia', on_click=check_questionnaire_completed)
