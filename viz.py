@@ -117,12 +117,13 @@ def scatter_ranking(df_selected, highlight_user='', crests=None):
     return fig
 
 
+def radar_plot(df_selected, highlight_user='', params=[], mapping=None):
 
-def radar_plot(df_selected, highlight_user=''):
-
-
-
-    params = ['Tecnologia', 'Calcio', 'Personale', 'Economico']
+    if mapping:
+        labels = [mapping[k] for k in mapping.keys()]
+    else:
+        labels = params
+    
 
     low = df_selected[params].min(axis=0)
     high = df_selected[params].max(axis=0)
@@ -132,7 +133,7 @@ def radar_plot(df_selected, highlight_user=''):
     mean_data = df_selected.loc[df_selected['Email'] != highlight_user, params].mean().values
 
    
-    radar = Radar(params, low, high,
+    radar = Radar(labels, low, high,
               lower_is_better=[],
               # whether to round any of the labels to integers instead of decimal places
               round_int=[False]*len(params),
@@ -182,14 +183,18 @@ def radar_plot(df_selected, highlight_user=''):
 
     return fig
 
-
-def pizza_plot(df_selected, highlight_user=''):
+def pizza_plot(df_selected, highlight_user='', params=[], mapping={}):
 
     df = df_selected.copy()
 
-    params = ['Tecnologia', 'Calcio', 'Personale', 'Economico']
+    if mapping:
+        labels = [mapping[k] for k in mapping.keys()]
+    else:
+        labels = params
 
-    ranked_df = df.set_index(['Nome', 'Cognome','Email'])[params].rank(ascending=True, pct=True).reset_index()
+    
+
+    ranked_df = df.set_index(['Nome', 'Cognome','Email'])[params].rank(ascending=True, pct=True, method='max').reset_index()
     rank_col = 'Rank'
 
     user_record = ranked_df.loc[ranked_df['Email'] == highlight_user].iloc[0]
@@ -201,7 +206,7 @@ def pizza_plot(df_selected, highlight_user=''):
 
     # instantiate PyPizza class
     baker = PyPizza(
-        params=params,                  # list of parameters
+        params=labels,                  # list of parameters
         background_color="#ffffff",     # background color
         straight_line_color="#EBEBE9",  # color for straight lines
         straight_line_lw=1,             # linewidth for straight lines
@@ -213,7 +218,7 @@ def pizza_plot(df_selected, highlight_user=''):
     # plot pizza
     fig, ax = baker.make_pizza(
         user_values,                          # list of values
-        figsize=(8, 8.5),                # adjust figsize according to your need
+        figsize=(6, 6.5),                # adjust figsize according to your need
         color_blank_space="same",        # use same color to fill blank space
         slice_colors=slice_colors,       # color for individual slices
         value_colors=text_colors,        # color for the value-text
@@ -237,15 +242,15 @@ def pizza_plot(df_selected, highlight_user=''):
     )
 
     # add title
-    fig.text(
-        0.515, 0.975, f"{user_record['Nome']} {user_record['Cognome']}", size=16,
-        ha="center", color="#000000"
-    )
+    # fig.text(
+    #     0.515, 0.975, f"{user_record['Nome']} {user_record['Cognome']}", size=16,
+    #     ha="center", color="#000000"
+    # )
 
     # add subtitle
     fig.text(
-        0.515, 0.953,
-        "Percentile Rank vs Utenti Sport Analisi Academy",
+        0.515, 0.945,
+        f"{user_record['Nome']} {user_record['Cognome']} vs Utenti Sport Analisi Academy",
         size=13,
         ha="center", color="#000000"
     )

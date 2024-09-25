@@ -93,12 +93,16 @@ questions = {
         'question_text': 'Hai un PC Windows o un MAC?',
         'category': 'Tecnologia',
         'answers': {
-            'a_si': {
-                'text': 'Sì',
+            'a_windows': {
+                'text': 'Windows',
+                'points': 2,
+            },
+            'a_mac': {
+                'text': 'Mac',
                 'points': 2,
             },
             'a_no': {
-                'text': 'No',
+                'text': 'Non ho un pc',
                 'points': 2,
                 'message': "Per poter iniziare a lavorare nel calcio come match analyst lo si può fare anche senza tecnologia. Carta e penna funzionano sempre."
             }
@@ -154,7 +158,7 @@ questions = {
 
 score_ranges = {
     'START': {
-        'range': (0, 6),
+        'range': (-200, 6),
         'message': "Ci rivediamo dopo il tuo compleanno. Festeggiare insieme a chi ti vuole bene sarà per te un momento importante per coinvolgere amici e parenti nell’aiutarti a raccogliere le risorse per iniziare a diventare match analyst. Ti aspettiamo."
     },
     'BEGINNER': {
