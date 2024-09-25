@@ -25,10 +25,7 @@ def compute_scores(final_answers):
 
     return scores
 
-st.set_page_config(
-    layout='wide',
-    initial_sidebar_state="collapsed"
-)
+
 
 st.markdown(
     """

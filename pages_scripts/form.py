@@ -107,23 +107,26 @@ def display_subquestions_or_message(main_question_key, main_answer_key, question
 
 
 
-
-
 #MARK: Page
-img_col, title_col = st.columns([.2,.8], vertical_alignment='center')
-with img_col:
+logo_col, title_col = st.columns([.2,.8], vertical_alignment='center')
+with logo_col:
     st.image(osp.join('loghi', 'verde.png'))
 with title_col:
     st.title('Sport Analisi Academy')
 
-st.write(MESSAGE_INTRO)
+text_col, img_col = st.columns([0.48,0.52])
+with img_col:
+    st.image(osp.join('images', 'favaro_img.png'))
+with text_col:
+    st.write(MESSAGE_INTRO)
 
 #Change page if the button is clicked
 if st.session_state.questionnaire_completed:
-    st.switch_page("pages/graphs.py")
+    st.switch_page("pages_scripts/graphs.py")
 
 # Display the questionnaire form
-st.markdown('### Info personali')
+
+st.markdown('<br><h3> Info personali</h3>', unsafe_allow_html=True)
 name_col, surname_col = st.columns(2)
 
 with name_col:

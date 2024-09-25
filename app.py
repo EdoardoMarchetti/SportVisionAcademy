@@ -6,11 +6,50 @@ from streamlit_gsheets import GSheetsConnection
 from config import *
 
 pages = [
-        st.Page("pages/form.py", title="Form"),
-        st.Page("pages/graphs.py", title="Risultati"),
+        st.Page("pages_scripts/form.py", title="Form"),
+        st.Page("pages_scripts/graphs.py", title="Risultati"),
     ]
 
+
+
 pg = st.navigation(pages)
+
+if pg.title == 'Form':
+    st.set_page_config(
+        initial_sidebar_state='collapsed',
+        layout='centered'
+    )
+    st.markdown(
+        """
+    <style>
+        [data-testid="stSidebarCollapsedControl"] {
+            display: none
+        }
+        [data-testid="stSidebar"]{
+            display: none
+        }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
+elif pg.title == 'Risultati':
+    st.set_page_config(
+        initial_sidebar_state='collapsed',
+        layout='wide'
+    )
+    st.markdown(
+        """
+    <style>
+        [data-testid="stSidebarCollapsedControl"] {
+            display: none
+        }
+        [data-testid="stSidebar"]{
+            display: none
+        }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
 
 #MARK: Inizializzazione dello status
 #-----------------------------------
@@ -45,6 +84,5 @@ if 'show_error_message' not in st.session_state:
     st.session_state['show_error_message'] = False
 
 
-    
 
 pg.run()

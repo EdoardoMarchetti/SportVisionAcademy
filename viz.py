@@ -135,11 +135,8 @@ def radar_plot(df_selected, highlight_user='', params=[], mapping=None):
    
     radar = Radar(labels, low, high,
               lower_is_better=[],
-              # whether to round any of the labels to integers instead of decimal places
               round_int=[False]*len(params),
               num_rings=4,  # the number of concentric circles (excluding center circle)
-              # if the ring_width is more than the center_circle_radius then
-              # the center circle radius will be wider than the width of the concentric circles
               ring_width=1, center_circle_radius=1)
     
     fig, axs = grid(figheight=14, grid_height=0.915, title_height=0.06, endnote_height=0.025,
@@ -224,6 +221,7 @@ def pizza_plot(df_selected, highlight_user='', params=[], mapping={}):
         value_colors=text_colors,        # color for the value-text
         value_bck_colors=slice_colors,   # color for the blank spaces
         blank_alpha=0.4,                 # alpha for blank-space colors
+        param_location= 118,
         kwargs_slices=dict(
             edgecolor="#F2F2F2", zorder=2, linewidth=1
         ),                               # values to be used when plotting slices
@@ -252,7 +250,7 @@ def pizza_plot(df_selected, highlight_user='', params=[], mapping={}):
         0.515, 0.945,
         f"{user_record['Nome']} {user_record['Cognome']} vs Utenti Sport Analisi Academy",
         size=13,
-        ha="center", color="#000000"
+        ha="center", color="#8dbe21"
     )
 
 
