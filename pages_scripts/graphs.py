@@ -1,14 +1,11 @@
-from collections import defaultdict
-import re
 import pandas as pd
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
 from costants import *
 from utils import *
 import os.path as osp
-from viz import pizza_plot, scatter_ranking, radar_plot
+from viz import pizza_plot, radar_plot
 from config import *
-from streamlit_extras.stylable_container import stylable_container
+
 
 
 def compute_scores(final_answers):
